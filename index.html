@@ -360,6 +360,67 @@
     justify-content: center; gap: 6px; transition: all .15s; white-space: nowrap;
   }
   .cp-alt-btn:hover { border-color: #1a73e8; background: #f6f9ff; color: #1a73e8; }
+
+  /* ── Tab Grid (Option 4) ── */
+  .thumb-item.disabled { opacity: .38; cursor: default; pointer-events: none; }
+
+  /* ── SC Tabs Picker (Option 5) ── */
+  .sc-horiz-tabbar {
+    display: flex; background: #dee1e6; padding: 5px 8px 0; gap: 1px;
+    border-bottom: 1px solid #bdc1c6; flex-shrink: 0;
+    overflow: visible; position: relative; z-index: 5;
+  }
+  .sc-htab {
+    position: relative; display: flex; align-items: center; gap: 5px;
+    padding: 5px 10px 4px; border-radius: 6px 6px 0 0;
+    background: #bec2ca; color: #5f6368; font-size: 10.5px;
+    cursor: default; max-width: 120px; min-width: 36px; flex-shrink: 1;
+    border: 1px solid transparent; border-bottom: none; transition: background .1s;
+  }
+  .sc-htab.active { background: #fff; color: #202124; border-color: #bdc1c6; }
+  .sc-htab:hover  { background: #cdd0d6; color: #3c4043; }
+  .sc-htab.active:hover { background: #f5f5f5; }
+  .sc-htab-label  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+  .sc-htab-share  {
+    display: none; position: absolute; top: calc(100% + 5px);
+    left: 50%; transform: translateX(-50%); white-space: nowrap;
+    padding: 5px 10px; background: rgba(55,55,100,.85);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.22); border-radius: 6px;
+    color: #fff; font-size: 11px; cursor: pointer; font-family: inherit; z-index: 20;
+  }
+  .sc-htab-share:hover { background: rgba(75,75,130,.95); }
+  .sc-htab:hover .sc-htab-share { display: block; }
+
+  .sc-vert-body { display: flex; height: calc(100% - 26px); overflow: hidden; }
+  .sc-vert-sidebar {
+    width: 188px; background: #f3f3f5; border-right: 1px solid #d0d3d9;
+    padding: 6px 4px; display: flex; flex-direction: column; gap: 1px;
+    flex-shrink: 0; overflow: hidden;
+  }
+  .sc-vtab {
+    position: relative; display: flex; align-items: center; gap: 7px;
+    padding: 6px 8px; border-radius: 5px; flex-shrink: 0;
+    font-size: 10.5px; color: #202124; cursor: default;
+    overflow: hidden; white-space: nowrap; transition: background .1s;
+  }
+  .sc-vtab:hover  { background: #e3e5eb; }
+  .sc-vtab.active { background: #dce3f5; color: #1a73e8; }
+  .sc-vtab-label  { overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+  .sc-vtab-share  {
+    display: none; position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    padding: 4px 8px; white-space: nowrap;
+    background: rgba(55,55,100,.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.22); border-radius: 5px;
+    color: #fff; font-size: 10px; cursor: pointer; font-family: inherit; z-index: 20;
+  }
+  .sc-vtab-share:hover { background: rgba(75,75,130,.95); }
+  .sc-vtab:hover .sc-vtab-share { display: block; }
+
+  .sc-page-stub {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: rgba(0,0,0,.2);
+  }
 </style>
 </head>
 <body>
@@ -371,6 +432,8 @@
   <button class="flow-btn" onclick="setFlow(2)">Mac: Option 1 — Upfront Tab and Window/Screen fork</button>
   <button class="flow-btn" onclick="setFlow(3)">Mac: Option 2 — Upfront 3-way fork</button>
   <button class="flow-btn" onclick="setFlow(4)">Mac: Option 3 — Tab-centric</button>
+  <button class="flow-btn" onclick="setFlow(5)">Mac: Option 4 — Tab Grid</button>
+  <button class="flow-btn" onclick="setFlow(6)">Mac: Option 5 — SC Picker for Tabs</button>
   <span class="flow-hint">Click the present button ↓ to start</span>
 </div>
 
@@ -607,6 +670,67 @@
   </div>
 
   <!-- ══════════════════════════════════════
+       MAC OPTION 4 — Tab Grid
+  ══════════════════════════════════════ -->
+  <div class="overlay hidden" id="ov-tabgrid" onclick="if(event.target===this)closeAll()">
+    <div class="chrome-picker" onclick="event.stopPropagation()">
+      <div class="cp-head">
+        <h2>Choose which Firefox Tab to share with meet.google.com</h2>
+        <p>The site will be able to see the contents of your screen</p>
+      </div>
+      <div class="cp-body-grid"><div class="thumb-grid" id="tab-thumb-grid"></div></div>
+      <div class="cp-bottom">
+        <input type="checkbox" class="cp-checkbox" id="mute-tabgrid">
+        <label for="mute-tabgrid" style="cursor:pointer">Mute website notifications while sharing</label>
+      </div>
+      <div class="cp-foot">
+        <button class="btn-cancel" onclick="closeAll()">Cancel</button>
+        <button class="btn-share" id="shr-tabgrid" disabled onclick="onShareTab()">Share</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       MAC OPTION 5 — SC Picker for Tabs
+  ══════════════════════════════════════ -->
+  <div id="sc-tabs-picker" class="hidden">
+    <div class="sc-bar">
+      <div style="opacity:.8;display:flex;align-items:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20"/><path d="M7 9V4"/></svg>
+      </div>
+      <span class="sc-bar-title" style="margin-left:8px">Share a Firefox Tab</span>
+      <button class="sc-btn sc-btn-cancel" onclick="closeAll()">Cancel</button>
+    </div>
+    <div class="sc-stage">
+
+      <!-- Firefox: Horizontal tabs -->
+      <div class="sc-win" style="left:3%;top:6%;width:54%;height:72%">
+        <div class="sc-titlebar">
+          <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
+          <span class="sc-win-title">Firefox — Horizontal tabs</span>
+        </div>
+        <div style="display:flex;flex-direction:column;height:calc(100% - 26px);overflow:hidden">
+          <div class="sc-horiz-tabbar" id="horiz-tabbar"></div>
+          <div class="sc-page-stub" style="background:#0f0f10;color:rgba(255,255,255,.2)">⚡ bolt.new</div>
+        </div>
+      </div>
+
+      <!-- Firefox: Vertical tabs (sidebar) -->
+      <div class="sc-win" style="right:3%;top:11%;width:37%;height:64%">
+        <div class="sc-titlebar">
+          <div class="sc-dot r"></div><div class="sc-dot y"></div><div class="sc-dot g"></div>
+          <span class="sc-win-title">Firefox — Vertical tabs (sidebar)</span>
+        </div>
+        <div class="sc-vert-body">
+          <div class="sc-vert-sidebar" id="vert-tabbar"></div>
+          <div class="sc-page-stub" style="background:#202124;color:rgba(255,255,255,.2)">📹 meet.google.com</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
        macOS SCContentSharingPicker
   ══════════════════════════════════════ -->
   <div id="sc-picker" class="hidden">
@@ -706,7 +830,7 @@
   }
 
   function closeAll() {
-    document.querySelectorAll('.overlay, #sc-picker').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.overlay, #sc-picker, #sc-tabs-picker').forEach(el => el.classList.add('hidden'));
   }
 
   function onShareClick() {
@@ -718,8 +842,12 @@
       document.getElementById('ov-2').classList.remove('hidden');
     } else if (currentFlow === 3) {
       document.getElementById('ov-3cards').classList.remove('hidden');
-    } else {
+    } else if (currentFlow === 4) {
       openOpt4Picker();
+    } else if (currentFlow === 5) {
+      openTabGrid();
+    } else if (currentFlow === 6) {
+      showTabSCPicker();
     }
   }
 
@@ -921,6 +1049,44 @@
     el.classList.add('selected');
     const picker = el.closest('.chrome-picker');
     if (picker) { const btn = picker.querySelector('.btn-share'); if (btn) btn.disabled = false; }
+  }
+
+  /* ── Option 4: Tab Grid ── */
+  const TAB_BG = { meet:'#1e3a6e', bolt:'#0f0f10', yt:'#0f0f0f', google:'#f5f7fa', chat:'#212121' };
+
+  function openTabGrid() {
+    const grid = document.getElementById('tab-thumb-grid');
+    grid.innerHTML = TABS.map(t => {
+      const isThis = t.id === 'meet';
+      const bg = TAB_BG[t.id] || '#303134';
+      return `<div class="thumb-item${isThis ? ' disabled' : ''}" ${isThis ? '' : 'onclick="selectThumb(this)"'}>
+        <div class="thumb-img" style="background:${bg};font-size:28px">${t.fav}</div>
+        <div class="thumb-foot"><span>${t.fav}</span><span style="overflow:hidden;text-overflow:ellipsis">${isThis ? '(This tab) ' : ''}${t.title}</span></div>
+      </div>`;
+    }).join('');
+    document.getElementById('ov-tabgrid').classList.remove('hidden');
+  }
+
+  /* ── Option 5: SC Picker for Tabs ── */
+  function showTabSCPicker() {
+    closeAll();
+    // Horizontal tabs: bolt.new is the active/visible tab
+    document.getElementById('horiz-tabbar').innerHTML = TABS.map(t =>
+      `<div class="sc-htab${t.id === 'bolt' ? ' active' : ''}">
+        <span style="flex-shrink:0">${t.fav}</span>
+        <span class="sc-htab-label">${t.title}</span>
+        <button class="sc-htab-share" onclick="onShareTab()">Share This Tab</button>
+      </div>`
+    ).join('');
+    // Vertical tabs: meet.google.com is the active/visible tab
+    document.getElementById('vert-tabbar').innerHTML = TABS.map(t =>
+      `<div class="sc-vtab${t.id === 'meet' ? ' active' : ''}">
+        <span style="flex-shrink:0">${t.fav}</span>
+        <span class="sc-vtab-label">${t.title}</span>
+        <button class="sc-vtab-share" onclick="onShareTab()">Share This Tab</button>
+      </div>`
+    ).join('');
+    document.getElementById('sc-tabs-picker').classList.remove('hidden');
   }
 
   /* ── Init ── */
