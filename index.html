@@ -466,18 +466,12 @@
     border: none; color: #fff; font-size: 13px; font-weight: 500;
     cursor: pointer; font-family: inherit; z-index: 10;
   }
-  .sc-tab-share-overlay:hover { background: rgba(48,48,110,.85); }
+  .sc-tab-share-overlay:hover { background: rgba(26,115,232,.88); transform: scale(1.02); }
   .sc-tab-share-overlay.hidden { display: none; }
-  #sc-tabs-picker.click-mode .sc-htab { cursor: pointer; }
-  #sc-tabs-picker.click-mode .sc-htab:hover .sc-htab-share { display: none; }
-  #sc-tabs-picker.click-mode .sc-htab--selected { background: #c8d0f0; color: #1a1a6e; border-color: #8090d0; }
-  #sc-tabs-picker.click-mode .sc-htab--selected.active { background: #c8d0f0; }
-  #sc-tabs-picker.click-mode .sc-vtab { cursor: pointer; }
-  #sc-tabs-picker.click-mode .sc-vtab:hover .sc-vtab-share { display: none; }
-  #sc-tabs-picker.click-mode .sc-vtab--selected { background: #dce3f5; color: #1a73e8; }
-  /* content-mode — hover tab buttons hidden; overlays are made visible by JS */
+  /* content-mode — hover tab buttons hidden; tabs are clickable to switch */
   #sc-tabs-picker.content-mode .sc-htab:hover .sc-htab-share { display: none; }
   #sc-tabs-picker.content-mode .sc-vtab:hover .sc-vtab-share { display: none; }
+  .sc-htab--clickable, .sc-vtab--clickable { cursor: pointer; }
 </style>
 </head>
 <body>
@@ -491,7 +485,6 @@
   <button class="flow-btn" onclick="setFlow(4)">Mac: Option 3 — Tab-centric</button>
   <button class="flow-btn" onclick="setFlow(5)">Mac: Option 4 — Tab Grid</button>
   <button class="flow-btn" onclick="setFlow(6)">Mac: Option 5 — Fork + SC Tab content share</button>
-  <button class="flow-btn" onclick="setFlow(7)">Mac: Option 6 — SC Picker, click to select tab</button>
   <span class="flow-hint">Click the present button ↓ to start</span>
 </div>
 
@@ -1050,8 +1043,6 @@
       openTabGrid();
     } else if (currentFlow === 6) {
       document.getElementById('ov-5fork').classList.remove('hidden');
-    } else if (currentFlow === 7) {
-      showTabSCPicker(true);
     }
   }
 
@@ -1298,21 +1289,12 @@
   }
 
   /* ── Options 5 & 6: SC Picker for Tabs ── */
-  function selectTabForShare(id, el) {
-    const picker = el.closest('#sc-tabs-picker');
-    // clear all selections and hide all overlays
-    picker.querySelectorAll('.sc-htab--selected, .sc-vtab--selected').forEach(t =>
-      t.classList.remove('sc-htab--selected', 'sc-vtab--selected')
-    );
-    picker.querySelectorAll('.sc-tab-share-overlay').forEach(b => b.classList.add('hidden'));
-    // select this tab
-    el.classList.add(el.classList.contains('sc-htab') ? 'sc-htab--selected' : 'sc-vtab--selected');
-    // show share overlay on this window's page content area
+  function switchContentTab(id, el) {
+    const bar = el.closest('.sc-horiz-tabbar, .sc-vert-sidebar');
+    bar?.querySelectorAll('.sc-htab, .sc-vtab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
     const overlay = el.closest('.sc-win')?.querySelector('.sc-tab-share-overlay');
-    if (overlay) {
-      overlay.dataset.tid = id;
-      overlay.classList.remove('hidden');
-    }
+    if (overlay) overlay.dataset.tid = id;
   }
 
   function onShareTabFromOverlay(btn) {
@@ -1327,16 +1309,14 @@
     // reset all overlays to hidden before each open
     document.querySelectorAll('#sc-tabs-picker .sc-tab-share-overlay').forEach(b => b.classList.add('hidden'));
 
-    const clickMode   = mode === 'click';
     const contentMode = mode === 'content';
-    const click = clickMode ? `onclick="selectTabForShare(event.currentTarget.dataset.tid, this)"` : '';
 
-    const htab = (t, active) => `<div class="sc-htab${active?' active':''}" data-tid="${t.id}" ${click}>
+    const htab = (t, active) => `<div class="sc-htab${active?' active':''}${contentMode?' sc-htab--clickable':''}" data-tid="${t.id}" ${contentMode?`onclick="switchContentTab('${t.id}',this)"`:''}>
       <span style="flex-shrink:0">${t.fav}</span>
       <span class="sc-htab-label">${t.title}</span>
       <button class="sc-htab-share" onclick="event.stopPropagation();onShareTabById('${t.id}')">Share This Tab</button>
     </div>`;
-    const vtab = (t, active) => `<div class="sc-vtab${active?' active':''}" data-tid="${t.id}" ${click}>
+    const vtab = (t, active) => `<div class="sc-vtab${active?' active':''}${contentMode?' sc-vtab--clickable':''}" data-tid="${t.id}" ${contentMode?`onclick="switchContentTab('${t.id}',this)"`:''}>
       <span style="flex-shrink:0">${t.fav}</span>
       <span class="sc-vtab-label">${t.title}</span>
       <button class="sc-vtab-share" onclick="event.stopPropagation();onShareTabById('${t.id}')">Share This Tab</button>
@@ -1349,13 +1329,12 @@
     document.getElementById('vert-tabbar').innerHTML =
       TABS.map(t => vtab(t, t.id === 'meet')).join('');
     document.getElementById('vert-tabbar-collapsed').innerHTML =
-      TABS.map(t => `<div class="sc-vtab${t.id==='meet'?' active':''}" data-tid="${t.id}" ${click}>
+      TABS.map(t => `<div class="sc-vtab${t.id==='meet'?' active':''}${contentMode?' sc-vtab--clickable':''}" data-tid="${t.id}" ${contentMode?`onclick="switchContentTab('${t.id}',this)"`:''}>
         <span>${t.fav}</span>
         <button class="sc-vtab-share" onclick="event.stopPropagation();onShareTabById('${t.id}')">Share This Tab</button>
       </div>`).join('');
 
     const picker = document.getElementById('sc-tabs-picker');
-    picker.classList.toggle('click-mode', clickMode);
     picker.classList.toggle('content-mode', contentMode);
     picker.classList.remove('hidden');
 
